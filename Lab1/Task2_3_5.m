@@ -95,4 +95,117 @@ play(player);
 
 audiowrite('ResynSpeech.wav', s_hat, fs);
 
+%% Step 3.1
+K = 25; % 25/10/128 Step 3.3
+
+blockResidual = zeros(blockLen, nBlocks);
+for i=1:nBlocks
+    blockResidual(:,i) = e_hat((i-1)*blockLen + 1:i*blockLen);
+    % find most significant absolute residual
+    [~,index] = sort(abs(blockResidual(:,i))); 
+    % set the remaining values to zero
+    blockResidual(index(end-K+1:end),i) = 0;
+end
+
+e_modify = reshape(blockResidual,nSamples,1);
+
+%% Step 3.2
+s_hat = zeros(nSamples,1);
+
+% first block
+s_hat(1:blockLen) = filter(1, a(:,1), e_modify(1:blockLen));
+
+for j=2:nBlocks
+    blockResidual = e_modify((j-1)*blockLen + 1 - p:j*blockLen);
+    filterResidual = filter(1, a(:,j), blockResidual);
+    % remove the previous data
+    s_hat((j-1)*blockLen + 1:j*blockLen) = filter(1, a(:,j), filterResidual(p+1:end));
+end
+
+figure;
+subplot(2,1,1)
+plot(1:nSamples,speechSignal);title('Original Speech Signal')
+xlabel('n');ylabel('amplitude');
+subplot(2,1,2)
+plot(1:nSamples,s_hat);title('Re-synthesized Speech Signal');
+xlabel('n');ylabel('amplitude');
+
+player = audioplayer(s_hat,fs,nBits);
+play(mySentence);
+play(player);
+
+filename = 'ResynSpeech_K_25.wav';
+audiowrite(filename, s_hat, fs);
+
+%% Step 5.1
+
+% using the lpc coefficients from Step 2.2
+fm = 1:fs/2;
+omega = 2*pi*fm/fs;
+expo = zeros(fs/2,p+1);
+
+% lpc magnitude spectrum for speech signal
+A = zeros(fs/2,nBlocks);
+P = zeros(fs/2,nBlocks);
+
+for i=1:nBlocks
+    a_l = a(:,i);
+    
+    for l=0:p
+        expo(:,l+1) = a_l(l+1)*exp(-1j*omega*l);
+    end
+    
+    absoluteSum = abs(sum(expo,2));
+    A(:,i) = 1./absoluteSum;
+    P(:,i) = A(:,i).^2;
+end
+
+% lpc magnitude spectrum for synthetic speech signal
+% for each block, estimate lpc parameters
+a_hat = zeros(p+1, nBlocks);
+for i=1:nBlocks
+    blockData = s_hat((i-1)*blockLen + 1:i*blockLen);
+    [a_hat(:,i), ~] = lpc(blockData, p);
+end
+
+A_hat = zeros(fs/2,nBlocks);
+P_hat = zeros(fs/2,nBlocks);
+
+for i=1:nBlocks
+    a_l = a_hat(:,i);
+    
+    for l=0:p
+        expo(:,l+1) = a_l(l+1)*exp(-1j*omega*l);
+    end
+    
+    absoluteSum = abs(sum(expo,2));
+    A_hat(:,i) = 1./absoluteSum;
+    P_hat(:,i) = A_hat(:,i).^2;
+end
+
+% choose a block to compare difference
+index = 200;
+figure;
+subplot(2,1,1)
+plot(omega,P(:,index));
+title('Power Spectral of Original Signal (one block)');
+xlabel('\omega');ylabel('power');
+subplot(2,1,2)
+plot(omega,P_hat(:,index));
+title('Power Spectral of synthetic Signal (one block)');
+xlabel('\omega');ylabel('power');
+
+%% Step 5.2
+d = zeros(nBlocks,1);
+M = fs/2;
+
+for i=1:nBlocks
+    summ = 10*log10(abs(A(:,i) - A_hat(:,i)).^2);
+    d(i) = 1/M*sum(summ);
+end
+
+figure;
+plot(1:nBlocks,d);title('Average distortion')
+xlabel('block number');ylabel('distortion');
+
 
