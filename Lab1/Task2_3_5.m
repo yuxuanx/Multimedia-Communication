@@ -1,4 +1,4 @@
-clc;clear
+%clc;clear
 %% Parameters
 fs = 8e3; % sampling frequency
 t = 15; % sound duration
@@ -9,16 +9,16 @@ nBits = 8; % number of bits
 mySentence = audiorecorder(fs, nBits, nChannel);
 
 %% Step 2.1
-pause;
-recordblocking(mySentence, t); % record the sound
-%play(myVowel);
-
-audioData = getaudiodata(mySentence);
-audiowrite('MySentence.wav', audioData, fs);
-
-% [audio_data, audio_f] = audioread('MySentence.wav');
 % pause;
-play(mySentence);
+% recordblocking(mySentence, t); % record the sound
+% %play(myVowel);
+% 
+% audioData = getaudiodata(mySentence);
+% audiowrite('MySentence.wav', audioData, fs);
+% 
+% % [audio_data, audio_f] = audioread('MySentence.wav');
+% % pause;
+% play(mySentence);
 
 %% Step 2.2
 [speechSignal, speech_f] = audioread('MySentence.wav');
@@ -27,7 +27,7 @@ tBlock = 0.02; % each block with duration 20ms
 nBlocks = t/tBlock;
 
 blockLen = tBlock*fs; % number of samples in each block
-p = 10; % order of lpc model
+p = 1; % order of lpc model
 a = zeros(p+1, nBlocks);
 
 % for each block, estimate lpc parameters
@@ -47,23 +47,25 @@ for j=2:nBlocks
     blockData = speechSignal((j-1)*blockLen + 1 - p:j*blockLen);
     filterData = filter(a(:,j), 1, blockData);
     % remove the previous data
-    e_hat((j-1)*blockLen + 1:j*blockLen) = filter(a(:,j), 1, filterData(p+1:end));
+    e_hat((j-1)*blockLen + 1:j*blockLen) = filterData(p+1:end);
 end
 
+timeX = (1:nSamples)/fs;
 figure;
-plot(1:nSamples,e_hat);title('Residual Sequence');
-xlabel('n');ylabel('amplitude');
+plot(timeX,e_hat);title('Residual Sequence');
+xlabel('t(s)');ylabel('amplitude');
 
-index = 100;
+index = 300;
 blockChoosen = (index - 1)*blockLen : (index + 1)*blockLen;
 
+timeX = blockChoosen/fs;
 figure;
 subplot(2,1,1);
-plot(blockChoosen,speechSignal(blockChoosen));
-title('Speech Signal Sequence');xlabel('n');ylabel('amplitude');
+plot(timeX,speechSignal(blockChoosen));
+title('Speech Signal Sequence of Two Blocks');xlabel('t(s)');ylabel('amplitude');
 subplot(2,1,2);
-plot(blockChoosen,e_hat(blockChoosen));
-title('Residual Sequence');xlabel('n');ylabel('amplitude');
+plot(timeX,e_hat(blockChoosen));
+title('Residual Sequence of Two Blocks');xlabel('t(s)');ylabel('amplitude');
 
 %% Step 2.4
 s_hat = zeros(nSamples,1);
@@ -75,36 +77,37 @@ for j=2:nBlocks
     blockResidual = e_hat((j-1)*blockLen + 1 - p:j*blockLen);
     filterResidual = filter(1, a(:,j), blockResidual);
     % remove the previous data
-    s_hat((j-1)*blockLen + 1:j*blockLen) = filter(1, a(:,j), filterResidual(p+1:end));
+    s_hat((j-1)*blockLen + 1:j*blockLen) = filterResidual(p+1:end);
 end
 
+timeX = (1:nSamples)/fs;
 figure;
 subplot(3,1,1)
-plot(1:nSamples,speechSignal);title('Original Speech Signal')
-xlabel('n');ylabel('amplitude');
+plot(timeX,speechSignal);title('Original Speech Signal')
+xlabel('t(s)');ylabel('amplitude');
 subplot(3,1,2)
-plot(1:nSamples,s_hat);title('Re-synthesized Speech Signal');
-xlabel('n');ylabel('amplitude');
+plot(timeX,s_hat);title('Re-synthesized Speech Signal');
+xlabel('t(s)');ylabel('amplitude');
 subplot(3,1,3)
-plot(1:nSamples,e_hat);title('Residual Sequence');
-xlabel('n');ylabel('amplitude');
+plot(timeX,e_hat);title('Residual Sequence');
+xlabel('t(s)');ylabel('amplitude');
 
-player = audioplayer(s_hat,fs,nBits);
-play(mySentence);
-play(player);
-
-audiowrite('ResynSpeech.wav', s_hat, fs);
+% player = audioplayer(s_hat,fs,nBits);
+% play(mySentence);
+% play(player);
+% 
+% audiowrite('ResynSpeech.wav', s_hat, fs);
 
 %% Step 3.1
-K = 25; % 25/10/128 Step 3.3
+K = 10; % 25/10/128 Step 3.3
 
 blockResidual = zeros(blockLen, nBlocks);
 for i=1:nBlocks
     blockResidual(:,i) = e_hat((i-1)*blockLen + 1:i*blockLen);
     % find most significant absolute residual
-    [~,index] = sort(abs(blockResidual(:,i))); 
+    [~,index] = sort(abs(blockResidual(:,i)),'descend'); 
     % set the remaining values to zero
-    blockResidual(index(end-K+1:end),i) = 0;
+    blockResidual(index(K+1:end),i) = 0;
 end
 
 e_modify = reshape(blockResidual,nSamples,1);
@@ -119,34 +122,35 @@ for j=2:nBlocks
     blockResidual = e_modify((j-1)*blockLen + 1 - p:j*blockLen);
     filterResidual = filter(1, a(:,j), blockResidual);
     % remove the previous data
-    s_hat((j-1)*blockLen + 1:j*blockLen) = filter(1, a(:,j), filterResidual(p+1:end));
+    s_hat((j-1)*blockLen + 1:j*blockLen) = filterResidual(p+1:end);
 end
 
+timeX = (1:nSamples)/fs;
 figure;
 subplot(2,1,1)
-plot(1:nSamples,speechSignal);title('Original Speech Signal')
-xlabel('n');ylabel('amplitude');
+plot(timeX,speechSignal);title('Original Speech Signal')
+xlabel('t(s)');ylabel('amplitude');
 subplot(2,1,2)
-plot(1:nSamples,s_hat);title('Re-synthesized Speech Signal');
-xlabel('n');ylabel('amplitude');
+plot(timeX,s_hat);title('Re-synthesized Speech Signal');
+xlabel('t(s)');ylabel('amplitude');
 
-player = audioplayer(s_hat,fs,nBits);
-play(mySentence);
-play(player);
-
-filename = 'ResynSpeech_K_25.wav';
-audiowrite(filename, s_hat, fs);
+% player = audioplayer(s_hat,fs,nBits);
+% play(mySentence);
+% play(player);
+% 
+% filename = 'ResynSpeech_K_25.wav';
+% audiowrite(filename, s_hat, fs);
 
 %% Step 5.1
 
 % using the lpc coefficients from Step 2.2
-fm = 1:fs/2;
+fm = 0:fs/2;
 omega = 2*pi*fm/fs;
-expo = zeros(fs/2,p+1);
+expo = zeros(fs/2+1,p+1);
 
 % lpc magnitude spectrum for speech signal
-A = zeros(fs/2,nBlocks);
-P = zeros(fs/2,nBlocks);
+A = zeros(fs/2+1,nBlocks);
+P = zeros(fs/2+1,nBlocks);
 
 for i=1:nBlocks
     a_l = a(:,i);
@@ -168,8 +172,8 @@ for i=1:nBlocks
     [a_hat(:,i), ~] = lpc(blockData, p);
 end
 
-A_hat = zeros(fs/2,nBlocks);
-P_hat = zeros(fs/2,nBlocks);
+A_hat = zeros(fs/2+1,nBlocks);
+P_hat = zeros(fs/2+1,nBlocks);
 
 for i=1:nBlocks
     a_l = a_hat(:,i);
@@ -206,6 +210,6 @@ end
 
 figure;
 plot(1:nBlocks,d);title('Average distortion')
-xlabel('block number');ylabel('distortion');
+xlabel('block number');ylabel('distortion (dB)');
 
 
