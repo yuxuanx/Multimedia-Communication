@@ -18,7 +18,7 @@ end
 
 [~,nFrames] = size(s); % Number of frames in video
 % Selecting 2 image frames
-index = [50,80];
+index = [50,60];
 frame1 = s(index(1)).cdata;
 frame2 = s(index(2)).cdata;
 
@@ -30,7 +30,7 @@ end
 
 % Save image as .bmp format
 imwrite(frame1,'frame50.bmp','bmp');
-imwrite(frame2,'frame80.bmp','bmp');
+imwrite(frame2,'frame60.bmp','bmp');
 figure
 imagesc(frame1)
 colormap gray
