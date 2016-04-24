@@ -1,4 +1,6 @@
 function [ blockCompensated ] = motionCompensation( location, blockSize, Iold, MV )
+% Assign the values in shifted block in Iold to motion block, for non
+% motion block, copy the image values in corresponding blocks in Iold
 xlocation = ceil(location(1)/16);
 ylocation = ceil(location(2)/16);
 dx = MV(xlocation,ylocation,1);

@@ -36,7 +36,7 @@ colormap gray
 [x,y] = size(img);
 
 % PSNR measure
-nBits = 8;
+nBits = 1;
 Max = 2^nBits-1;
 squareError = e2.^2;
 MSE = sum(squareError(:))/x*y;

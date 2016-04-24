@@ -76,7 +76,7 @@ MV(:,:,2) = dyMatrix;
 % blocks by copying previous blocks
 fun = @(block_struct) motionCompensation(block_struct.location, block_struct.blockSize, Iold, MV);
 I5 = blockproc(Iold, [16 16], fun);
-I4 = I5.*Imotion;
+I4 = I5.*Imotion; % Motion compensation image
 figure
 imagesc(I4)
 colormap gray
@@ -90,11 +90,11 @@ imagesc(e5*30)
 colormap gray
 
 % PSNR measure
-nBits = 8;
+nBits = 1;
 Max = 2^nBits-1;
 squareError = e5.^2;
 MSE = sum(squareError(:))/Nx*Ny;
-PSNR_I5 = 10*log10(Max^2/MSE); % acceptable > 30dB
+PSNR_I5 = 10*log10(Max^2/MSE); 
 
 % MSSIM measure
 MSSIM_I5 = meanSSIM(Inew,I5);

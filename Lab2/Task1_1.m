@@ -67,7 +67,7 @@ imagesc(e)
 colormap gray
 
 % PSNR measure
-nBits = 8;
+nBits = 1; % intensity image (not unsigned char)
 Max = 2^nBits-1;
 squareError = e1.^2;
 MSE = sum(squareError(:))/vidHeight*vidWidth;

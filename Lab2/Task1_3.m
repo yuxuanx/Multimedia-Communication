@@ -20,11 +20,11 @@ colormap gray
 [x,y] = size(img);
 
 % PSNR measure
-nBits = 8;
+nBits = 1;
 Max = 2^nBits-1;
 squareError = e3.^2;
 MSE = sum(squareError(:))/x*y;
-PSNR3 = 10*log10(Max^2/MSE); % acceptable > 30dB
+PSNR3 = 10*log10(Max^2/MSE); % acceptable > 30dB (unsigned char)
 
 % MSSIM measure
 MSSIM3 = meanSSIM(img,I3);
