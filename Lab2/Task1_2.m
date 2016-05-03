@@ -1,7 +1,7 @@
 clc;clear;close all
 % Block-based DCT-domain Image Compression
 %% Step 2.1
-img = imread('lena.bmp');
+img = imread('frame50.bmp');
 if length(size(img)) == 3
     img = rgb2gray(img);
 end
@@ -18,8 +18,9 @@ imagesc(F2)
 colormap gray
 
 %% Step 2.3
-fun = @(block_struct) blockCompression(block_struct.data);
-F2 = blockproc(F2, [8 8], fun);
+% fun = @(block_struct) blockCompression(block_struct.data);
+% F2 = blockproc(F2, [8 8], fun);
+F2 = Compression( F2 );
 
 %% Step 2.4
 fun = @(block_struct) idct2(block_struct.data);
@@ -39,7 +40,7 @@ colormap gray
 nBits = 1;
 Max = 2^nBits-1;
 squareError = e2.^2;
-MSE = sum(squareError(:))/x*y;
+MSE = sum(squareError(:))/(x*y);
 PSNR2 = 10*log10(Max^2/MSE); % acceptable > 30dB
 
 % MSSIM measure

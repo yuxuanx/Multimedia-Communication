@@ -93,7 +93,7 @@ colormap gray
 nBits = 1;
 Max = 2^nBits-1;
 squareError = e5.^2;
-MSE = sum(squareError(:))/Nx*Ny;
+MSE = sum(squareError(:))/(Nx*Ny);
 PSNR_I5 = 10*log10(Max^2/MSE); 
 
 % MSSIM measure

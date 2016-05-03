@@ -1,7 +1,7 @@
 clc;clear;close all
 % Subband Image Compression using Wavelets
 %% Step 3.5
-img = imread('lena.bmp');
+img = imread('frame50.bmp');
 img = mat2gray(img); % Convert format to intensity image
 figure
 imagesc(img)
@@ -23,7 +23,7 @@ colormap gray
 nBits = 1;
 Max = 2^nBits-1;
 squareError = e3.^2;
-MSE = sum(squareError(:))/x*y;
+MSE = sum(squareError(:))/(x*y);
 PSNR3 = 10*log10(Max^2/MSE); % acceptable > 30dB (unsigned char)
 
 % MSSIM measure

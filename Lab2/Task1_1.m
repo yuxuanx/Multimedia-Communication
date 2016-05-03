@@ -44,7 +44,7 @@ colormap gray
 
 %% Step 1.3
 reshape_F = reshape(F,vidHeight*vidWidth,1);
-[~,I] = sort(reshape_F); 
+[~,I] = sort(abs(reshape_F)); 
 th = I(round(0.9*vidHeight*vidWidth)); % Set threshold position
 
 F1 = F;
@@ -70,7 +70,7 @@ colormap gray
 nBits = 1; % intensity image (not unsigned char)
 Max = 2^nBits-1;
 squareError = e1.^2;
-MSE = sum(squareError(:))/vidHeight*vidWidth;
+MSE = sum(squareError(:))/(vidHeight*vidWidth);
 PSNR = 10*log10(Max^2/MSE); % acceptable > 30dB
 
 % Mean SSIM measure
