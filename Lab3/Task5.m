@@ -11,7 +11,8 @@ k = 127;
 msgwords = gf(packets,m); % Represent data by Galois array
 codes = rsenc(msgwords,n,k); % Perform RS encoder
 [nw,~] = size(codes);
-noise = (1+randi(nw,nw,n)).*randerr(nw,n,t); % t errors per row
+
+noise = (1+randint(nw,n,n)).*randerr(nw,n,t); % t errors per row
 cnoisy = codes + noise; % Add noise to the code
 % RS decoding
 [dc, nerrs, corrcode] = rsdec(cnoisy,n,k);

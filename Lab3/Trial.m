@@ -37,35 +37,27 @@ n = 2^m - 1;
 msgwords = gf(packets,m); 
 codes = rsenc(msgwords,n,k);
 codewords = codes.x;
+[n_w,~] = size(codewords);
 
-codewords1 = codewords(1:n,:);
-[nw,~] = size(codes);
-nb_zeros = n-rem(nw,n);
-% Add zero codewords, if the number of codewords is not divisible by n
-codewords2 = [codewords(n:nw,:);zeros(nb_zeros-1,n)];
-interleaver = [codewords1';codewords2'];
-
+interleaver = codewords';
 inCodewords = gf(interleaver,m); 
-t = 40;
-[n_w,~] = size(inCodewords);
-noise = (1+randi([0 n-1],n_w,n)).*randerr(n_w,n,t); % t errors per row
-cnoisy = gf(uint32(noise),m)+inCodewords;
 
-e_packet = zeros(1,n); % Generate a codeword with zero values
-errorpacket = gf(e_packet,m); % Generate an error packet in class gf
-% Replace the random chosen (1/50) codeword by a packet with zero values
-nb = floor(n_w/50); 
-cnoisy(randsample(1:nw,nb),:) = repmat(errorpacket,nb,1);
+t = 50;
+noise = randi(n,n,n_w).*randerr(n,n_w,t); % t errors per row
+cnoisy = noise+inCodewords;
+
+% e_packet = zeros(1,n_w); % Generate a codeword with zero values
+% errorpacket = gf(e_packet,m); % Generate an error packet in class gf
+% % Replace the random chosen (1/50) codeword by a packet with zero values
+% nb = floor(n_w/50); 
+% cnoisy(randsample(1:n_w,nb),:) = repmat(errorpacket,nb,1);
 
 noisePacket = cnoisy.x;
 
-deCodewords1 = noisePacket(1:n,:)';
-deCodewords2 = noisePacket(n+1:2*n,:)';
-deCodewords = [deCodewords1;deCodewords2];
-deCodewords = deCodewords(1:nw,:);
+deCodewords = noisePacket';
 deCode = gf(deCodewords,m); 
 
-[dc,nerrs,dec_msg] = rsdec(deCode,n,k);
+dec_msg = rsdec(deCode,n,k);
 packets = dec_msg.x;
 
 dePackets = reshape(packets,1,numel(packets));
