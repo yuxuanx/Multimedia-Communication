@@ -39,11 +39,10 @@ codes = rsenc(msgwords,n,k);
 codewords = codes.x;
 [n_w,~] = size(codewords);
 
-interleaver = codewords';
-inCodewords = gf(interleaver,m); 
+inCodewords = gf(codewords,m); 
 
-t = 50;
-noise = randi(n,n,n_w).*randerr(n,n_w,t); % t errors per row
+t = 64;
+noise = randi(n,n_w,n).*randerr(n_w,n,t); % t errors per row
 cnoisy = noise+inCodewords;
 
 % e_packet = zeros(1,n_w); % Generate a codeword with zero values
@@ -54,8 +53,7 @@ cnoisy = noise+inCodewords;
 
 noisePacket = cnoisy.x;
 
-deCodewords = noisePacket';
-deCode = gf(deCodewords,m); 
+deCode = gf(noisePacket,m); 
 
 dec_msg = rsdec(deCode,n,k);
 packets = dec_msg.x;
