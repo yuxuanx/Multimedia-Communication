@@ -3,21 +3,21 @@
 fs = 8e3; % sampling frequency
 t = 15; % sound duration
 nChannel = 1; % number of channels
-nBits = 8; % number of bits
+nBits = 16; % number of bits
 
 % setting audio recorder object
 mySentence = audiorecorder(fs, nBits, nChannel);
 
 %% Step 2.1
+pause;
+recordblocking(mySentence,  t); % record the sound
+%play(myVowel);
+
+audioData = getaudiodata(mySentence);
+audiowrite('MySentence.wav', audioData, fs);
+
+% [audio_data, audio_f] = audioread('MySentence.wav');
 % pause;
-% recordblocking(mySentence, t); % record the sound
-% %play(myVowel);
-% 
-% audioData = getaudiodata(mySentence);
-% audiowrite('MySentence.wav', audioData, fs);
-% 
-% % [audio_data, audio_f] = audioread('MySentence.wav');
-% % pause;
 % play(mySentence);
 
 %% Step 2.2
@@ -27,13 +27,13 @@ tBlock = 0.02; % each block with duration 20ms
 nBlocks = t/tBlock;
 
 blockLen = tBlock*fs; % number of samples in each block
-p = 1; % order of lpc model
+p = 10; % order of lpc model
 a = zeros(p+1, nBlocks);
 
 % for each block, estimate lpc parameters
 for i=1:nBlocks
     blockData = speechSignal((i-1)*blockLen + 1:i*blockLen);
-    [a(:,i), ~] = lpc(blockData, p);
+    [a(:,i), err] = lpc(blockData, p);
 end
 
 %% Step 2.3
@@ -96,10 +96,10 @@ xlabel('t(s)');ylabel('amplitude');
 % play(mySentence);
 % play(player);
 % 
-% audiowrite('ResynSpeech.wav', s_hat, fs);
+audiowrite('ResynSpeech.wav', s_hat, fs);
 
 %% Step 3.1
-K = 10; % 25/10/128 Step 3.3
+K = 25; % 25/10/128 Step 3.3
 
 blockResidual = zeros(blockLen, nBlocks);
 for i=1:nBlocks
@@ -138,8 +138,8 @@ xlabel('t(s)');ylabel('amplitude');
 % play(mySentence);
 % play(player);
 % 
-% filename = 'ResynSpeech_K_25.wav';
-% audiowrite(filename, s_hat, fs);
+filename = 'ResynSpeech_K_10.wav';
+audiowrite(filename, s_hat, fs);
 
 %% Step 5.1
 
@@ -210,6 +210,19 @@ end
 
 figure;
 plot(1:nBlocks,d);title('Average distortion')
+xlabel('block number');ylabel('distortion (dB)');
+
+figure;
+subplot(3,1,1)
+plot(1:nBlocks,d1);title('Average distortion (Entire residual sequence)')
+xlabel('block number');ylabel('distortion (dB)');
+
+subplot(3,1,2)
+plot(1:nBlocks,d2);title('Average distortion with 128 most significant residual sequence')
+xlabel('block number');ylabel('distortion (dB)');
+
+subplot(3,1,3)
+plot(1:nBlocks,d3);title('Average distortion with 25 most significant residual sequence')
 xlabel('block number');ylabel('distortion (dB)');
 
 
